@@ -1,62 +1,68 @@
 package pod
 
 import (
+	"fmt"
 	"log"
-	"context"
-	"flag"
-	"k8s.io/client-go/tools/clientcmd"
-	"path/filepath"
+	"os"
+	"context" 
+
+	guuid "github.com/google/uuid"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/client-go/kubernetes"
-	//"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/homedir"
-	guuid "github.com/google/uuid"
+	"k8s.io/client-go/rest"
 )
 
 type PodArgs struct {
-	PodName			string
 	PodNamespace 	string
+	Client			*kubernetes.Clientset
 	FileID 			string
 	Input			string
 	Output			string
 }
 
-func (pa PodArgs) Create() {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
+func NewPodArgs(fileId, input, output string) (podArgs *PodArgs, err error){
+	podNamespace := os.Getenv("POD_NAMESPACE")
 
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if podNamespace == "" {
+		err = fmt.Errorf("init failed: POD_NAMESPACE environment variable not set")
+		return
+	}
+
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		return
 	}
-
-	// config, err := rest.InClusterConfig()
-	// if err != nil {
-	// 	return
-	// }
 
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
+	podArgs = &PodArgs{
+		PodNamespace: podNamespace,
+		Client:	client,
+		FileID: fileId,
+		Input: input,
+		Output: output,
+	}
+	return
+}
+
+func (pa PodArgs) CreatePod() error {
 	podSpec := pa.GetPodObject()
 
-	pod, err := client.CoreV1().Pods("argo-events").Create(context.TODO(), podSpec, metav1.CreateOptions{})
+	pod, err := pa.Client.CoreV1().Pods("argo-events").Create(context.TODO(), podSpec, metav1.CreateOptions{})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if pod != nil {
 		log.Printf("Successfully created Pod")
 	}
+
+	return nil
 }
 
 func (pa PodArgs) GetPodObject() *core.Pod {

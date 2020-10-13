@@ -2,13 +2,18 @@ package main
 
 import (
 	"log"
-	"github.com/streadway/amqp"
 	"encoding/json"
-	"github.com/icap-adaptation-service/pkg"
+
+	"github.com/streadway/amqp"
+	pod "github.com/icap-adaptation-service/pkg"
 )
 
+var exchange = "adaptation-exchange"
+var routingKey = "adaptation-request"
+var queueName = "adaptation-request-queue"
+
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq-service:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -16,8 +21,14 @@ func main() {
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare("hello", false, false, false, false,	nil)
+	err = ch.ExchangeDeclare(exchange, "direct", true, false, false, false, nil,)
+	failOnError(err, "Failed to declare an exchange")
+
+	q, err := ch.QueueDeclare(queueName, false, false, false, false,	nil)
 	failOnError(err, "Failed to declare a queue")
+
+	err = ch.QueueBind(q.Name, routingKey, exchange, false, nil)
+	failOnError(err, "Failed to bind queue")
 
 	msgs, err := ch.Consume(q.Name, "", true, false, false, false, nil)
 	failOnError(err, "Failed to register a consumer")
@@ -32,13 +43,15 @@ func main() {
 			err := json.Unmarshal(d.Body, &body)
 			failOnError(err, "Failed to read the message body")
 
-			podArgs := PodArgs{
-				FileID: body["file-id"].(string),
-				Input: body["source-file-location"].(string),
-				Output: body["rebuilt-file-location"].(string),
-			}
+			fileID := body["file-id"].(string)
+			input := body["source-file-location"].(string)
+			output := body["rebuilt-file-location"].(string)
 
-			podArgs.Create()
+			podArgs, err := pod.NewPodArgs(fileID, input, output)
+			failOnError(err, "Failed to initialize Pod")
+			
+			err = podArgs.CreatePod()
+			failOnError(err, "Failed to start Pod")
 		}
 	}()
 
