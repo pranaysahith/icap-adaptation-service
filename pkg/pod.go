@@ -16,10 +16,10 @@ import (
 
 type PodArgs struct {
 	PodNamespace	string
-	Client			*kubernetes.Clientset
-	FileID			string
-	Input			string
-	Output			string
+	Client	*kubernetes.Clientset
+	FileID	string
+	Input	string
+	Output	string
 }
 
 func NewPodArgs(fileId, input, output string) (podArgs *PodArgs, err error){
