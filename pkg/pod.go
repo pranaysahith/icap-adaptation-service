@@ -15,9 +15,9 @@ import (
 )
 
 type PodArgs struct {
-	PodNamespace 	string
+	PodNamespace	string
 	Client			*kubernetes.Clientset
-	FileID 			string
+	FileID			string
 	Input			string
 	Output			string
 }
@@ -95,7 +95,7 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 				{
 					Name: "rebuild",
 					Image: "diggers/icap-rebuild",
-					ImagePullPolicy: core.PullAlways,
+					ImagePullPolicy: core.PullIfNotPresent,
 					Env: []core.EnvVar{
 						{Name: "FILE_ID", Value: pa.FileID},
 						{Name: "INPUT_PATH", Value: pa.Input},
