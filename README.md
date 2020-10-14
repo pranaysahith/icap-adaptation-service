@@ -42,7 +42,7 @@ kubectl create -n icap-adaptation secret docker-registry regcred --docker-server
 
 5. Update glasswallsourcevolume & glasswalltargetvolume to point to local test file directory
 ```
-    path: "/run/desktop/mnt/host/<drive>/<folder>"
+path: "/run/desktop/mnt/host/<drive>/<folder>"
 ```
 
 6. Run Helm Install
