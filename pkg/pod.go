@@ -15,11 +15,11 @@ import (
 )
 
 type PodArgs struct {
-	PodNamespace	string
-	Client	*kubernetes.Clientset
-	FileID	string
-	Input	string
-	Output	string
+	PodNamespace    string
+	Client          *kubernetes.Clientset
+	FileID          string
+	Input           string
+	Output          string
 }
 
 func NewPodArgs(fileId, input, output string) (podArgs *PodArgs, err error){
@@ -53,7 +53,7 @@ func NewPodArgs(fileId, input, output string) (podArgs *PodArgs, err error){
 func (pa PodArgs) CreatePod() error {
 	podSpec := pa.GetPodObject()
 
-	pod, err := pa.Client.CoreV1().Pods("argo-events").Create(context.TODO(), podSpec, metav1.CreateOptions{})
+	pod, err := pa.Client.CoreV1().Pods(pa.PodNamespace).Create(context.TODO(), podSpec, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -69,10 +69,11 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 	return &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "rebuild-" + guuid.New().String(),
-			Namespace: "argo-events",
+			Namespace: pa.PodNamespace,
 		},
 		Spec: core.PodSpec{
 			ImagePullSecrets: []core.LocalObjectReference{{Name: "regcred"}},
+			RestartPolicy: core.RestartPolicyNever,
 			Volumes: []core.Volume{
 				{
 					Name: "sourcedir",
@@ -94,7 +95,7 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 			Containers: []core.Container{
 				{
 					Name: "rebuild",
-					Image: "diggers/icap-rebuild",
+					Image: "glasswallsolutions/icap-request-processing",
 					ImagePullPolicy: core.PullIfNotPresent,
 					Env: []core.EnvVar{
 						{Name: "FILE_ID", Value: pa.FileID},
