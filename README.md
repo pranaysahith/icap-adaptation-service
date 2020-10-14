@@ -40,7 +40,7 @@ kubectl create ns icap-adaptation
 kubectl create -n icap-adaptation secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=<DOCKER HUB USERNAME> --docker-password='<DOCKER HUB PASSWORD>'--docker-email=<DOCKER HUB EMAIL> 
 ```
 
-5. Update glasswallsourcevolume & glasswalltargetvolume to point to local test file directory
+5. Update glasswallsourcevolume.yaml & glasswalltargetvolume.yaml to point to local test file directory
 ```
 path: "/run/desktop/mnt/host/<drive>/<folder>"
 ```
