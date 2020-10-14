@@ -3,7 +3,7 @@ kind: Deployment
 metadata: 
   name: {{ .Values.deployment.name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.deployment.replicas }}
   selector:
     matchLabels:
       app: {{ .Values.deployment.name }}
@@ -18,3 +18,5 @@ spec:
         env:
         - name: POD_NAMESPACE
           value: {{ .Values.deployment.namespace }}
+        - name: AMQP_URL
+          value: {{ .Values.deployment.amqpurl }}

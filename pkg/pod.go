@@ -1,10 +1,9 @@
 package pod
 
 import (
+	"context" 
 	"fmt"
 	"log"
-	"os"
-	"context" 
 
 	guuid "github.com/google/uuid"
 	core "k8s.io/api/core/v1"
@@ -15,39 +14,32 @@ import (
 )
 
 type PodArgs struct {
-	PodNamespace    string
-	Client          *kubernetes.Clientset
-	FileID          string
-	Input           string
-	Output          string
+	PodNamespace string
+	Client       *kubernetes.Clientset
+	FileID       string
+	Input        string
+	Output       string
 }
 
-func NewPodArgs(fileId, input, output string) (podArgs *PodArgs, err error){
-	podNamespace := os.Getenv("POD_NAMESPACE")
-
-	if podNamespace == "" {
-		err = fmt.Errorf("init failed: POD_NAMESPACE environment variable not set")
-		return
-	}
-
+func NewPodArgs(fileId, input, output, podNamespace string)(*PodArgs, error){
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	podArgs = &PodArgs{
+	podArgs := &PodArgs{
 		PodNamespace: podNamespace,
-		Client:	client,
-		FileID: fileId,
-		Input: input,
-		Output: output,
+		Client:	      client,
+		FileID:       fileId,
+		Input:        input,
+		Output:       output,
 	}
-	return
+	return podArgs, nil
 }
 
 func (pa PodArgs) CreatePod() error {
@@ -55,6 +47,11 @@ func (pa PodArgs) CreatePod() error {
 
 	pod, err := pa.Client.CoreV1().Pods(pa.PodNamespace).Create(context.TODO(), podSpec, metav1.CreateOptions{})
 	if err != nil {
+		return err
+	}
+
+	if err == nil && pod == nil {
+		err = fmt.Errorf("Failed to create pod and no error returned")
 		return err
 	}
 
@@ -68,12 +65,12 @@ func (pa PodArgs) CreatePod() error {
 func (pa PodArgs) GetPodObject() *core.Pod {
 	return &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "rebuild-" + guuid.New().String(),
+			Name:      "rebuild-" + guuid.New().String(),
 			Namespace: pa.PodNamespace,
 		},
 		Spec: core.PodSpec{
 			ImagePullSecrets: []core.LocalObjectReference{{Name: "regcred"}},
-			RestartPolicy: core.RestartPolicyNever,
+			RestartPolicy:    core.RestartPolicyNever,
 			Volumes: []core.Volume{
 				{
 					Name: "sourcedir",
@@ -94,8 +91,8 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 			},
 			Containers: []core.Container{
 				{
-					Name: "rebuild",
-					Image: "glasswallsolutions/icap-request-processing",
+					Name:            "rebuild",
+					Image:           "glasswallsolutions/icap-request-processing",
 					ImagePullPolicy: core.PullIfNotPresent,
 					Env: []core.EnvVar{
 						{Name: "FILE_ID", Value: pa.FileID},
@@ -103,8 +100,8 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 						{Name: "OUTPUT_PATH", Value: pa.Output},
 					},
 					VolumeMounts: []core.VolumeMount{
-						{Name: "sourcedir",	MountPath: "/input"},
-						{Name: "targetdir",	MountPath: "/output"},
+						{Name: "sourcedir", MountPath: "/input"},
+						{Name: "targetdir", MountPath: "/output"},
 					},
 				},
 			},

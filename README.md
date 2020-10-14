@@ -45,7 +45,12 @@ kubectl create -n icap-adaptation secret docker-registry regcred --docker-server
 path: "/run/desktop/mnt/host/<drive>/<folder>"
 ```
 
-6. Run Helm Install
+6. cd to chart directory
+```
+cd .\charts\
+```
+
+7. Run Helm Install
 ```
 helm install . --namespace icap-adaptation --generate-name
 ```

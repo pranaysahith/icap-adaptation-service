@@ -1,0 +1,11 @@
+environment:
+serviceAccount:
+  name: adaptation-service-sa
+deployment:
+  name: adaptation-service
+  namespace: icap-adaptation
+  replicas: 1
+  amqpurl: "amqp://guest:guest@rabbitmq-service:5672/"
+volumes:
+  sourcepath: "/run/desktop/mnt/host/c/test-data"
+  targetpath: "/run/desktop/mnt/host/c/test-data-output"
