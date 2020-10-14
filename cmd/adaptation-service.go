@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
 	"encoding/json"
+	"log"
+	"os"
 
-	"github.com/streadway/amqp"
 	pod "github.com/icap-adaptation-service/pkg"
+	"github.com/streadway/amqp"
 )
 
 var exchange = "adaptation-exchange"
@@ -13,7 +14,14 @@ var routingKey = "adaptation-request"
 var queueName = "adaptation-request-queue"
 
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq-service:5672/")
+	podNamespace := os.Getenv("POD_NAMESPACE")
+	amqpURL := os.Getenv("AMQP_URL")
+
+	if podNamespace == "" || amqpURL == "" {
+		log.Fatalf("init failed: POD_NAMESPACE or AMQP_URL environment variables not set")
+	}
+
+	conn, err := amqp.Dial(amqpURL)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -21,10 +29,10 @@ func main() {
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	err = ch.ExchangeDeclare(exchange, "direct", true, false, false, false, nil,)
+	err = ch.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
 	failOnError(err, "Failed to declare an exchange")
 
-	q, err := ch.QueueDeclare(queueName, false, false, false, false,	nil)
+	q, err := ch.QueueDeclare(queueName, false, false, false, false, nil)
 	failOnError(err, "Failed to declare a queue")
 
 	err = ch.QueueBind(q.Name, routingKey, exchange, false, nil)
@@ -47,9 +55,9 @@ func main() {
 			input := body["source-file-location"].(string)
 			output := body["rebuilt-file-location"].(string)
 
-			podArgs, err := pod.NewPodArgs(fileID, input, output)
+			podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace)
 			failOnError(err, "Failed to initialize Pod")
-			
+
 			err = podArgs.CreatePod()
 			failOnError(err, "Failed to start Pod")
 		}

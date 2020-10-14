@@ -1,6 +1,0 @@
-environment:
-serviceAccount:
-  name: adaptation-service-sa
-deployment:
-  name: adaptation-service
-  namespace: icap-adaptation
