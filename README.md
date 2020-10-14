@@ -3,20 +3,20 @@
 
 ICAP Adaptation Service is an in-cluster process to monitor a RabbitMQ instance and to spin up the Request Processing pod to facilitate the Rebuild functionality of the Glasswall ICAP offering.
 
-## Built With
+### Built With
 - Go
 - Helm
 - Docker
 
-# Getting Started
+## Getting Started
 To get a local instance up and running follow these steps:
 
-## Prerequisites
+### Prerequisites
 - Kubernetes cluster running locally
 - Helm installed
 - kubectl installed
 
-## Installation
+### Installation
 1. Clone the repo
 
 ```
@@ -50,7 +50,7 @@ kubectl create -n icap-adaptation secret docker-registry regcred --docker-server
 helm install . --namespace icap-adaptation --generate-name
 ```
 
-# Usage
+## Usage
 
 To start the adaptation process send a message to the RabbitMQ with the following:
 
