@@ -1,3 +1,6 @@
+# The final solution will likely not have a PV at all but instead use
+# dynamic provisioning off of the pvc. For testing this is fine, of course,
+# although I would make the path configurable through values
 kind: PersistentVolume
 apiVersion: v1
 metadata:

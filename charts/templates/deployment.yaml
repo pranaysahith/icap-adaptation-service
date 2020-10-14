@@ -1,3 +1,5 @@
+# Replicas should be configurable - we'll need more than one in production
+# Pod Spec should probably have resource requests and limits
 apiVersion: apps/v1
 kind: Deployment
 metadata: 
