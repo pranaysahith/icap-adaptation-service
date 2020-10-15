@@ -4,11 +4,13 @@ import (
 	"context" 
 	"fmt"
 	"log"
+	"time"
 
 	guuid "github.com/google/uuid"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/matryer/try"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -46,7 +48,19 @@ func NewPodArgs(fileId, input, output, podNamespace string)(*PodArgs, error){
 func (pa PodArgs) CreatePod() error {
 	podSpec := pa.GetPodObject()
 
-	pod, err := pa.Client.CoreV1().Pods(pa.PodNamespace).Create(context.TODO(), podSpec, metav1.CreateOptions{})
+	var pod *core.Pod = nil
+
+	err := try.Do(func(attempt int) (bool, error){
+		var err error
+		pod, err = pa.Client.CoreV1().Pods(pa.PodNamespace).Create(context.TODO(), podSpec, metav1.CreateOptions{}) 
+
+		if err != nil  && attempt < 5{
+			time.Sleep((time.Duration(attempt) * 5) * time.Second) // exponential 5 second wait
+		}
+
+		return attempt < 5, err // try 5 times
+	})
+
 	if err != nil {
 		return err
 	}
