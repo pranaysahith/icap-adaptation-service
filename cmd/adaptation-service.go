@@ -49,17 +49,26 @@ func main() {
 			var body map[string]interface{}
 
 			err := json.Unmarshal(d.Body, &body)
-			failOnError(err, "Failed to read the message body")
+			if err != nil {
+				ch.Nack(d.DeliveryTag, false, false)
+				log.Printf("Failed to read message body, dropping message. Error: %s", err)
+			}
 
 			fileID := body["file-id"].(string)
 			input := body["source-file-location"].(string)
 			output := body["rebuilt-file-location"].(string)
 
 			podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace)
-			failOnError(err, "Failed to initialize Pod")
+			if err != nil {
+				ch.Nack(d.DeliveryTag, false, true)
+				log.Printf("Failed to initialize Pod, placing message back on queue. Error: %s", err)
+			}
 
 			err = podArgs.CreatePod()
-			failOnError(err, "Failed to start Pod")
+			if err != nil {
+				ch.Nack(d.DeliveryTag, false, true)
+				log.Printf("Unable to create pod, placing message back on queue. Error: %s", err)
+			}
 		}
 	}()
 
