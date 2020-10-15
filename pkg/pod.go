@@ -9,6 +9,7 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -102,6 +103,12 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 					VolumeMounts: []core.VolumeMount{
 						{Name: "sourcedir", MountPath: "/input"},
 						{Name: "targetdir", MountPath: "/output"},
+					},
+					Resources: core.ResourceRequirements{
+						Limits: core.ResourceList{
+							core.ResourceCPU: resource.MustParse("1"),
+							core.ResourceMemory: resource.MustParse("1Gi"),
+						},
 					},
 				},
 			},
