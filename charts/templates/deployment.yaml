@@ -14,12 +14,16 @@ spec:
     spec:
       containers:
       - name: adaptation-service
-        image: glasswallsolutions/icap-adaptation-service
+        image: diggers/icap-adaptation-service-test
         env:
         - name: POD_NAMESPACE
           value: {{ .Values.deployment.namespace }}
         - name: AMQP_URL
           value: {{ .Values.deployment.amqpurl }}
+        - name: INPUT_MOUNT
+          value: {{ .Values.deployment.inputmount }}
+        - name: OUTPUT_MOUNT
+          value: {{ .Values.deployment.outputmount }}
         resources:
           limits:
             cpu: 1

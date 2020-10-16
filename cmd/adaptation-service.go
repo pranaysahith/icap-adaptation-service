@@ -16,9 +16,11 @@ var queueName = "adaptation-request-queue"
 func main() {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	amqpURL := os.Getenv("AMQP_URL")
+	inputMount := os.Getenv("INPUT_MOUNT")
+	outputMount := os.Getenv("OUTPUT_MOUNT")
 
-	if podNamespace == "" || amqpURL == "" {
-		log.Fatalf("init failed: POD_NAMESPACE or AMQP_URL environment variables not set")
+	if podNamespace == "" || amqpURL == "" || inputMount == "" || outputMount == ""{
+		log.Fatalf("init failed: POD_NAMESPACE, AMQP_URL, INPUT_MOUNT or OUTPUT_MOUNT environment variables not set")
 	}
 
 	conn, err := amqp.Dial(amqpURL)
@@ -58,7 +60,7 @@ func main() {
 			input := body["source-file-location"].(string)
 			output := body["rebuilt-file-location"].(string)
 
-			podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace)
+			podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace, inputMount, outputMount)
 			if err != nil {
 				ch.Nack(d.DeliveryTag, false, true)
 				log.Printf("Failed to initialize Pod, placing message back on queue. Error: %s", err)

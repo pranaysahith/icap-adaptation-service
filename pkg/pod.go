@@ -22,9 +22,11 @@ type PodArgs struct {
 	FileID       string
 	Input        string
 	Output       string
+	InputMount   string
+	OutputMount  string
 }
 
-func NewPodArgs(fileId, input, output, podNamespace string)(*PodArgs, error){
+func NewPodArgs(fileId, input, output, podNamespace, inputMount, outputMount string)(*PodArgs, error){
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -41,6 +43,8 @@ func NewPodArgs(fileId, input, output, podNamespace string)(*PodArgs, error){
 		FileID:       fileId,
 		Input:        input,
 		Output:       output,
+		InputMount:   inputMount,
+		OutputMount:   outputMount,
 	}
 	return podArgs, nil
 }
@@ -115,8 +119,8 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 						{Name: "OUTPUT_PATH", Value: pa.Output},
 					},
 					VolumeMounts: []core.VolumeMount{
-						{Name: "sourcedir", MountPath: "/input"},
-						{Name: "targetdir", MountPath: "/output"},
+						{Name: "sourcedir", MountPath: pa.InputMount},
+						{Name: "targetdir", MountPath: pa.OutputMount},
 					},
 					Resources: core.ResourceRequirements{
 						Limits: core.ResourceList{
