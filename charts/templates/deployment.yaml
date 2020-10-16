@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: adaptation-service
-        image: diggers/icap-adaptation-service-test
+        image: glasswallsolutions/icap-adaptation-service
         env:
         - name: POD_NAMESPACE
           value: {{ .Values.deployment.namespace }}
