@@ -56,7 +56,11 @@ func (pa PodArgs) CreatePod() error {
 
 	err := try.Do(func(attempt int) (bool, error){
 		var err error
-		pod, err = pa.Client.CoreV1().Pods(pa.PodNamespace).Create(context.TODO(), podSpec, metav1.CreateOptions{}) 
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+		defer cancel()
+		
+		pod, err = pa.Client.CoreV1().Pods(pa.PodNamespace).Create(ctx, podSpec, metav1.CreateOptions{}) 
 
 		if err != nil  && attempt < 5{
 			time.Sleep((time.Duration(attempt) * 5) * time.Second) // exponential 5 second wait
