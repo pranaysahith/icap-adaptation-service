@@ -1,4 +1,4 @@
-name: Go
+name: Gated
 
 on:
   pull_request:
@@ -29,7 +29,7 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: cd cmd && go build -v .
 
     - name: Test
-      run: go test -v .
+      run: go test -v ./cmd

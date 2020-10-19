@@ -11,4 +11,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/run/desktop/mnt/host/c/test-data-output"
+    path: {{ .Values.volumes.targetpath }}

@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
 	"encoding/json"
+	"log"
+	"os"
 
-	"github.com/streadway/amqp"
 	pod "github.com/icap-adaptation-service/pkg"
+	"github.com/streadway/amqp"
 )
 
 var exchange = "adaptation-exchange"
@@ -13,7 +14,16 @@ var routingKey = "adaptation-request"
 var queueName = "adaptation-request-queue"
 
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq-service:5672/")
+	podNamespace := os.Getenv("POD_NAMESPACE")
+	amqpURL := os.Getenv("AMQP_URL")
+	inputMount := os.Getenv("INPUT_MOUNT")
+	outputMount := os.Getenv("OUTPUT_MOUNT")
+
+	if podNamespace == "" || amqpURL == "" || inputMount == "" || outputMount == ""{
+		log.Fatalf("init failed: POD_NAMESPACE, AMQP_URL, INPUT_MOUNT or OUTPUT_MOUNT environment variables not set")
+	}
+
+	conn, err := amqp.Dial(amqpURL)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -21,10 +31,10 @@ func main() {
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	err = ch.ExchangeDeclare(exchange, "direct", true, false, false, false, nil,)
+	err = ch.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
 	failOnError(err, "Failed to declare an exchange")
 
-	q, err := ch.QueueDeclare(queueName, false, false, false, false,	nil)
+	q, err := ch.QueueDeclare(queueName, false, false, false, false, nil)
 	failOnError(err, "Failed to declare a queue")
 
 	err = ch.QueueBind(q.Name, routingKey, exchange, false, nil)
@@ -41,17 +51,26 @@ func main() {
 			var body map[string]interface{}
 
 			err := json.Unmarshal(d.Body, &body)
-			failOnError(err, "Failed to read the message body")
+			if err != nil {
+				ch.Nack(d.DeliveryTag, false, false)
+				log.Printf("Failed to read message body, dropping message. Error: %s", err)
+			}
 
 			fileID := body["file-id"].(string)
 			input := body["source-file-location"].(string)
 			output := body["rebuilt-file-location"].(string)
 
-			podArgs, err := pod.NewPodArgs(fileID, input, output)
-			failOnError(err, "Failed to initialize Pod")
-			
+			podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace, inputMount, outputMount)
+			if err != nil {
+				ch.Nack(d.DeliveryTag, false, true)
+				log.Printf("Failed to initialize Pod, placing message back on queue. Error: %s", err)
+			}
+
 			err = podArgs.CreatePod()
-			failOnError(err, "Failed to start Pod")
+			if err != nil {
+				ch.Nack(d.DeliveryTag, false, true)
+				log.Printf("Unable to create pod, placing message back on queue. Error: %s", err)
+			}
 		}
 	}()
 
