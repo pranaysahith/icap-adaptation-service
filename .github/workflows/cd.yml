@@ -1,4 +1,4 @@
-name: CI Build
+name: CD Build
 env:
   REPOSITORY: glasswallsolutions
   IMAGE: icap-adaptation-service
