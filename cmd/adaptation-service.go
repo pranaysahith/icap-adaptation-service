@@ -113,7 +113,7 @@ func processMessage(d amqp.Delivery) (bool, error) {
 	input := body["source-file-location"].(string)
 	output := body["rebuilt-file-location"].(string)
 
-	podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace, inputMount, outputMount)
+	podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace, inputMount, outputMount, d.ReplyTo)
 	if err != nil {
 		msgTotal.WithLabelValues(k8sclient).Inc()
 		return true, fmt.Errorf("Failed to initialize Pod: %v", err)

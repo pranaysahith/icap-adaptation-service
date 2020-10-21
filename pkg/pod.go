@@ -24,9 +24,10 @@ type PodArgs struct {
 	Output       string
 	InputMount   string
 	OutputMount  string
+	ReplyTo      string
 }
 
-func NewPodArgs(fileId, input, output, podNamespace, inputMount, outputMount string)(*PodArgs, error){
+func NewPodArgs(fileId, input, output, podNamespace, inputMount, outputMount, replyTo string)(*PodArgs, error){
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -44,7 +45,8 @@ func NewPodArgs(fileId, input, output, podNamespace, inputMount, outputMount str
 		Input:        input,
 		Output:       output,
 		InputMount:   inputMount,
-		OutputMount:   outputMount,
+		OutputMount:  outputMount,
+		ReplyTo:      replyTo,
 	}
 	return podArgs, nil
 }
@@ -118,9 +120,10 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 					Image:           "glasswallsolutions/icap-request-processing",
 					ImagePullPolicy: core.PullIfNotPresent,
 					Env: []core.EnvVar{
-						{Name: "FILE_ID", Value: pa.FileID},
-						{Name: "INPUT_PATH", Value: pa.Input},
-						{Name: "OUTPUT_PATH", Value: pa.Output},
+						{Name: "FileId", Value: pa.FileID},
+						{Name: "InputPath", Value: pa.Input},
+						{Name: "OutputPath", Value: pa.Output},
+						{Name: "ReplyTo", Value: pa.ReplyTo},
 					},
 					VolumeMounts: []core.VolumeMount{
 						{Name: "sourcedir", MountPath: pa.InputMount},
