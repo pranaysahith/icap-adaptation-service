@@ -117,7 +117,7 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 			Containers: []core.Container{
 				{
 					Name:            "rebuild",
-					Image:           "glasswallsolutions/icap-request-processing",
+					Image:           "glasswallsolutions/icap-request-processing:main-54b2be5",
 					ImagePullPolicy: core.PullIfNotPresent,
 					Env: []core.EnvVar{
 						{Name: "FileId", Value: pa.FileID},
