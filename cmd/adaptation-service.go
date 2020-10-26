@@ -42,10 +42,11 @@ var (
 		[]string{"status"},
 	)
 
-	podNamespace = os.Getenv("POD_NAMESPACE")
-	amqpURL      = os.Getenv("AMQP_URL")
-	inputMount   = os.Getenv("INPUT_MOUNT")
-	outputMount  = os.Getenv("OUTPUT_MOUNT")
+	podNamespace            = os.Getenv("POD_NAMESPACE")
+	amqpURL                 = os.Getenv("AMQP_URL")
+	inputMount              = os.Getenv("INPUT_MOUNT")
+	outputMount             = os.Getenv("OUTPUT_MOUNT")
+	requestProcessingImage  = os.Getenv("REQUEST_PROCESSING_IMAGE")
 )
 
 func main() {
@@ -113,10 +114,21 @@ func processMessage(d amqp.Delivery) (bool, error) {
 	input := body["source-file-location"].(string)
 	output := body["rebuilt-file-location"].(string)
 
-	podArgs, err := pod.NewPodArgs(fileID, input, output, podNamespace, inputMount, outputMount, d.ReplyTo)
+	podArgs := pod.PodArgs{
+		PodNamespace:           podNamespace,
+		FileID:                 fileID,
+		Input:                  input,
+		Output:                 output,
+		InputMount:             inputMount,
+		OutputMount:            outputMount,
+		ReplyTo:                d.ReplyTo,
+		RequestProcessingImage: requestProcessingImage,
+	}
+
+	err = podArgs.GetClient()
 	if err != nil {
 		msgTotal.WithLabelValues(k8sclient).Inc()
-		return true, fmt.Errorf("Failed to initialize Pod: %v", err)
+		return true, fmt.Errorf("Failed to get client for cluster: %v", err)
 	}
 
 	err = podArgs.CreatePod()

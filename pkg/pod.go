@@ -17,38 +17,31 @@ import (
 )
 
 type PodArgs struct {
-	PodNamespace string
-	Client       *kubernetes.Clientset
-	FileID       string
-	Input        string
-	Output       string
-	InputMount   string
-	OutputMount  string
-	ReplyTo      string
+	PodNamespace           string
+	Client                 *kubernetes.Clientset
+	FileID                 string
+	Input                  string
+	Output                 string
+	InputMount             string
+	OutputMount            string
+	ReplyTo                string
+	RequestProcessingImage string
 }
 
-func NewPodArgs(fileId, input, output, podNamespace, inputMount, outputMount, replyTo string)(*PodArgs, error){
+func (podArgs *PodArgs) GetClient() (error){
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	podArgs := &PodArgs{
-		PodNamespace: podNamespace,
-		Client:	      client,
-		FileID:       fileId,
-		Input:        input,
-		Output:       output,
-		InputMount:   inputMount,
-		OutputMount:  outputMount,
-		ReplyTo:      replyTo,
-	}
-	return podArgs, nil
+	podArgs.Client = client
+
+	return nil
 }
 
 func (pa PodArgs) CreatePod() error {
@@ -117,7 +110,7 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 			Containers: []core.Container{
 				{
 					Name:            "rebuild",
-					Image:           "glasswallsolutions/icap-request-processing:main-54b2be5",
+					Image:           pa.RequestProcessingImage,
 					ImagePullPolicy: core.PullIfNotPresent,
 					Env: []core.EnvVar{
 						{Name: "FileId", Value: pa.FileID},
@@ -133,6 +126,10 @@ func (pa PodArgs) GetPodObject() *core.Pod {
 						Limits: core.ResourceList{
 							core.ResourceCPU: resource.MustParse("1"),
 							core.ResourceMemory: resource.MustParse("1Gi"),
+						},
+						Requests: core.ResourceList{
+							core.ResourceCPU: resource.MustParse("0.5"),
+							core.ResourceMemory: resource.MustParse("250Mi"),
 						},
 					},
 				},
