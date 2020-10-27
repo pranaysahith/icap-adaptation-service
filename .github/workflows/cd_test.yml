@@ -42,6 +42,7 @@ jobs:
         git commit -m 'update image tag'
         git push origin $IMAGE_TAG
         gh pr create --base main --title "Update adaptationservice image tag to $IMAGE_TAG" --body ""
+        sleep 5s
         gh pr merge $IMAGE_TAG -s
         # cd .. && rm -rf icap-infrastructure
       env:
