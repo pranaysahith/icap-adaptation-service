@@ -25,14 +25,15 @@ jobs:
         git clone https://pranaysahith:$GITHUB_TOKEN@github.com/pranaysahith/icap-infrastructure.git
         cd icap-infrastructure
         git fetch
-        git checkout -b $image_tag
+        IMAGE_TAG=${GITHUB_SHA::7}
+        git checkout -b $IMAGE_TAG
         # update imagestore.adaptationservice.tag value in the values.yaml file
-        yq write adaptation/values.yaml imagestore.adaptationservice.tag $image_tag -i
+        yq write adaptation/values.yaml imagestore.adaptationservice.tag $IMAGE_TAG -i
         git add adaptation/values.yaml
         git commit -m 'update image tag'
-        git push origin $image_tag
-        gh pr create --base main --title "Update adaptationservice image tag to $image_tag" --body ""
-        gh pr merge $image_tag -s
+        git push origin $IMAGE_TAG
+        gh pr create --base main --title "Update adaptationservice image tag to $IMAGE_TAG" --body ""
+        gh pr merge $IMAGE_TAG -s
         cd .. && rm -rf icap-infrastructure
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
