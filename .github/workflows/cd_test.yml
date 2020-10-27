@@ -18,9 +18,21 @@ jobs:
       uses: actions/checkout@v2
       
     - uses: fregante/setup-git-user@v1
+    - name: yq - portable yaml processor
+      uses: mikefarah/yq@3.4.1
     - name: Update image tag in icap-infrastructure repo
       run: |
-        gh repo clone pranaysahith/icap-infrastructure
-        rm -rf icap-infrastructure
+        git clone https://pranaysahith:$GITHUB_TOKEN@github.com/pranaysahith/icap-infrastructure.git
+        cd icap-infrastructure
+        git fetch
+        git checkout -b $image_tag
+        # update imagestore.adaptationservice.tag value in the values.yaml file
+        yq write adaptation/values.yaml imagestore.adaptationservice.tag $image_tag -i
+        git add adaptation/values.yaml
+        git commit -m 'update image tag'
+        git push origin $image_tag
+        gh pr create --base main --title "Update adaptationservice image tag to $image_tag" --body ""
+        gh pr merge $image_tag -s
+        cd .. && rm -rf icap-infrastructure
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
