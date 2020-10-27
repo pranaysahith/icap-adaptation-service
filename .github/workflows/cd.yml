@@ -44,7 +44,7 @@ jobs:
     - name: Docker Login
       uses: docker/login-action@v1.6.0
       with:
-        username: icapserviceaccount
+        username: pranaysahith
         password: ${{ secrets.ICAPDOCKERSECRET }}
     - name: Build and Push Docker Image
       run: |
