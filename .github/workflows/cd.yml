@@ -50,12 +50,11 @@ jobs:
       run: |
         docker build -t ${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ env.TAG }}-${GITHUB_SHA::7} -t ${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ env.TAG }}-latest .
         docker push ${{ env.REPOSITORY }}/${{ env.IMAGE }}
-
-    - name: yq - portable yaml processor
+    - name: Install yq - portable yaml processor
       run: |
         sudo wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64
         sudo chmod +x /usr/local/bin/yq
-    - name: Check out icap-infrastructure repo
+    - name: Checkout icap-infrastructure repo
       uses: actions/checkout@v2
       with:
         repository: pranaysahith/icap-infrastructure
@@ -68,12 +67,14 @@ jobs:
         git checkout -b $IMAGE_TAG
         git config user.email github-actions@github.com
         git config user.name github-actions
+        
         # update imagestore.adaptationservice.tag value in the values.yaml file
         yq write adaptation/values.yaml imagestore.adaptationservice.tag $IMAGE_TAG -i
         git add adaptation/values.yaml
         git commit -m 'update image tag'
         git push origin $IMAGE_TAG
-        # create a pull request from a new branch, merge the PR and delete the source branch.
+        
+        # create a pull request from a new branch to main branch, merge the PR and delete the source branch.
         gh pr create --base main --title "Update adaptationservice image tag to $IMAGE_TAG" --body ""
         sleep 5s
         gh pr merge $IMAGE_TAG -s
