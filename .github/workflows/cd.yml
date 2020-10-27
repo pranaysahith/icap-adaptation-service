@@ -8,6 +8,7 @@ on:
   push:
     branches: 
       - main
+      - develop
 
 jobs:
   build:
@@ -49,3 +50,34 @@ jobs:
       run: |
         docker build -t ${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ env.TAG }}-${GITHUB_SHA::7} -t ${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ env.TAG }}-latest .
         docker push ${{ env.REPOSITORY }}/${{ env.IMAGE }}
+
+    - name: yq - portable yaml processor
+      run: |
+        sudo wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_amd64
+        sudo chmod +x /usr/local/bin/yq
+    - name: Check out icap-infrastructure repo
+      uses: actions/checkout@v2
+      with:
+        repository: 'pranaysahith/icap-infrastructure'
+        token: ${{ secrets.GITHUBTOKEN }}
+        path: infra
+    - name: Update image tag in icap-infrastructure repo
+      run: |
+        # git clone https://pranaysahith:$GITHUB_TOKEN@github.com/pranaysahith/icap-infrastructure.git
+        # cd icap-infrastructure
+        cd infra
+        IMAGE_TAG=${{ env.TAG }}-${GITHUB_SHA::7}
+        git checkout -b $IMAGE_TAG
+        git config user.email github-actions@github.com
+        git config user.name github-actions
+        # update imagestore.adaptationservice.tag value in the values.yaml file
+        yq write adaptation/values.yaml imagestore.adaptationservice.tag $IMAGE_TAG -i
+        git add adaptation/values.yaml
+        git commit -m 'update image tag'
+        git push origin $IMAGE_TAG
+        gh pr create --base main --title "Update adaptationservice image tag to $IMAGE_TAG" --body ""
+        sleep 5s
+        gh pr merge $IMAGE_TAG -s
+        # cd .. && rm -rf icap-infrastructure
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
