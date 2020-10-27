@@ -1,6 +1,6 @@
 name: CD Build
 env:
-  REPOSITORY: glasswallsolutions
+  REPOSITORY: pranaysahith
   IMAGE: icap-adaptation-service
   TAG: main
 
