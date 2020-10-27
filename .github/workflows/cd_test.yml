@@ -17,7 +17,6 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
       
-    - uses: fregante/setup-git-user@v1
     - name: yq - portable yaml processor
       run: |
         sudo wget -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_amd64
@@ -29,6 +28,8 @@ jobs:
         git fetch
         IMAGE_TAG=${{ env.TAG }}-${GITHUB_SHA::7}
         git checkout -b $IMAGE_TAG
+        git config user.email "pranaysahith7@gmail.com"
+        git config user.name "Pranay Sahith Bejgum"
         # update imagestore.adaptationservice.tag value in the values.yaml file
         yq write adaptation/values.yaml imagestore.adaptationservice.tag $IMAGE_TAG -i
         git add adaptation/values.yaml
