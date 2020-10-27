@@ -7,7 +7,6 @@ env:
 on:
   push:
     branches: 
-      - develop
       - main
 
 jobs:
@@ -50,4 +49,3 @@ jobs:
       run: |
         docker build -t ${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ env.TAG }}-${GITHUB_SHA::7} -t ${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ env.TAG }}-latest .
         docker push ${{ env.REPOSITORY }}/${{ env.IMAGE }}
-      
