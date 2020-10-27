@@ -32,8 +32,8 @@ jobs:
         # git fetch
         IMAGE_TAG=${{ env.TAG }}-${GITHUB_SHA::7}
         git checkout -b $IMAGE_TAG
-        git config user.email "pranaysahith7@gmail.com"
-        git config user.name "Pranay Sahith Bejgum"
+        git config user.email github-actions@github.com
+        git config user.name github-actions
         # update imagestore.adaptationservice.tag value in the values.yaml file
         yq write adaptation/values.yaml imagestore.adaptationservice.tag $IMAGE_TAG -i
         git add adaptation/values.yaml
