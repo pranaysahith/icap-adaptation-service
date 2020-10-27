@@ -4,9 +4,9 @@ env:
   IMAGE: icap-adaptation-service
   TAG: develop
 
-on:
-  push:
-    branches: [ develop ]
+# on:
+#   push:
+#     branches: [ develop ]
 
 jobs:
   build:
